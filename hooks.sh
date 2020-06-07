@@ -11,8 +11,7 @@ fi
 echo "Installing hooks"
 mkdir ./git-hooks 2>/dev/null
 
-# library file
-cat <<-EOF > ./git-hooks/lib.sh
+cat <<- F > ./git-hooks/lib.sh
 #!/bin/bash
 
 function echoWhiteBold {
@@ -30,37 +29,35 @@ function echoSuccess {
 function echoError {
   echo -e "\e[1;31m\${1}\e[0m"
 }
-EOF
-
-# pre-commit hook
-cat <<- EOF > ./git-hooks/pre-commit
+F
+cat <<- F > ./git-hooks/pre-commit
 #/bin/bash
 source ./git-hooks/lib.sh
 LINTERS=\$(cat <<-LIST
-gofmt,deadcode,gocritic,goimports,nolintlint,govet,goconst,dogsled,errcheck,bodyclose,\\
+gofmt,deadcode,gocritic,goimports,govet,goconst,dogsled,errcheck,bodyclose,\
 gochecknoinits,gosec,gosimple,ineffassign,rowserrcheck,scopelint,staticcheck,stylecheck,gomnd,typecheck
 LIST
 )
-echoWarning "\nTesting with go linters\n"
+echoWarning "\nChecking your project with golangci-lint...\n"
 golangci-lint run --no-config --max-issues-per-linter=0 --max-same-issues=0 --tests=false --exclude="mnd: Magic number:.*<(operation|assign)> detected" --disable-all=true -E "\$LINTERS"
 if [ \$? -eq 0 ]; then
-  echoSuccess "👍 Everything is good 👍"
+  echoSuccess "👍 Everything seems fine 👍"
   echo -e "\n"
   exit 0
 else
   echoWhiteBold "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-  echoError "⚠ Please fix the issues above before commiting ⚠️"
+  echoError "⚠ Please fix the above issues before commiting ⚠️"
   exit 1
 fi
-EOF
+F
 
-# adding hooks to .gitignore
 chmod a+x ./git-hooks/pre-commit
 git config core.hooksPath git-hooks/
 
 if [ "$(grep -R git-hooks ./.gitignore|wc -l)" -eq 0 ]; then
-  echo -e "\ngit-hooks/" >> .gitignore
+  echo -e "\n#golang-git-hooks\ngit-hooks/" >> .gitignore
   echo "hooks.sh" >> .gitignore
 fi
 
 echo -e "All done!\n"
+

@@ -1,0 +1,18 @@
+#/bin/bash
+source ./git-hooks/lib.sh
+LINTERS=$(cat <<-LIST
+gofmt,deadcode,gocritic,goimports,govet,goconst,dogsled,errcheck,bodyclose,\
+gochecknoinits,gosec,gosimple,ineffassign,rowserrcheck,scopelint,staticcheck,stylecheck,gomnd,typecheck
+LIST
+)
+echoWarning "\nChecking your project with golangci-lint...\n"
+golangci-lint run --no-config --max-issues-per-linter=0 --max-same-issues=0 --tests=false --exclude="mnd: Magic number:.*<(operation|assign)> detected" --disable-all=true -E "$LINTERS"
+if [ $? -eq 0 ]; then
+  echoSuccess "👍 Everything seems fine 👍"
+  echo -e "\n"
+  exit 0
+else
+  echoWhiteBold "\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+  echoError "⚠ Please fix the above issues before commiting ⚠️"
+  exit 1
+fi
